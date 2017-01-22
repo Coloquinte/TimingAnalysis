@@ -15,15 +15,20 @@ class TimingAnalysis {
  public:
   TimingAnalysis(TimingGraph &graph);
 
-  void setDelay(int edge, Time delay) {
-    _delays[_graph.arcFromId(edge)] = delay;
-  }
+  void setDelays(const std::vector<Time> &delays);
+  void setDelay(int edge, Time delay);
+
   Time getArrivalTime(int node) const {
     return _arrivalTimes[_graph.nodeFromId(node)];
   }
 
-  void computeArrivalTimes();
-  Time computeArrivalTime(TimingGraph::Node);
+ private:
+  // For full timing analysis
+  void initArrivalTimes();
+  Time initArrivalTime(TimingGraph::Node);
+
+  // For incremental timing analysis
+  void updateArrivalTime(TimingGraph::Node);
 
  private:
   TimingGraph &_graph;
