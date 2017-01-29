@@ -4,6 +4,7 @@
 #include "lemon/connectivity.h"
 
 #include <exception>
+#include <cassert>
 
 using namespace lemon;
 
@@ -40,6 +41,9 @@ Time TimingAnalysis::initArrivalTime(TimingGraph::Node node) {
 }
 
 void TimingAnalysis::initArrivalTimes() {
+  for (int i = 0; i < _graph.nodeNum(); ++i) {
+     _arrivalTimes[_graph.nodeFromId(i)] = dirtyTime;
+  }
   for (TimingGraph::NodeIt node(_graph); node != INVALID; ++node) {
     initArrivalTime(node);
   }
@@ -47,26 +51,62 @@ void TimingAnalysis::initArrivalTimes() {
 
 void TimingAnalysis::setDelay(int edgeId, Time delay) {
   TimingGraph::Arc edge = _graph.arcFromId(edgeId);
+  Time oldDelay = _delays[edge];
   _delays[edge] = delay;
-  updateArrivalTime(_graph.target(edge));
+
+  Time sourceArrivalTime = _arrivalTimes[_graph.source(edge)];
+
+  if (delay > oldDelay) {
+    increaseArrivalTime(_graph.target(edge), sourceArrivalTime + delay);
+  } else if (delay < oldDelay) {
+    decreaseArrivalTime(_graph.target(edge), sourceArrivalTime + oldDelay, sourceArrivalTime + delay);
+  }
 }
 
-void TimingAnalysis::updateArrivalTime(TimingGraph::Node node) {
-  Time prevArrivalTime = _arrivalTimes[node];
+void TimingAnalysis::decreaseArrivalTime(TimingGraph::Node node, Time oldAT, Time newAT) {
+  Time nodeAT = _arrivalTimes[node];
+  assert (newAT < oldAT);
+  assert (nodeAT >= oldAT);
+  if (nodeAT != oldAT) {
+    // The arrival edge was not the critical one
+    return;
+  }
 
+  // This was (one of) the critical edge for this node
+  // We need to recompute the arrival time
   Time arrivalTime = 0;
   for (TimingGraph::InArcIt inArc(_graph, node); inArc != INVALID; ++inArc) {
     TimingGraph::Node parent = _graph.source(inArc);
     Time parentAT = _arrivalTimes[parent];
     arrivalTime = std::max(arrivalTime, parentAT + _delays[inArc]);
   }
-  if (arrivalTime == prevArrivalTime) {
-    return;
-  }
 
   _arrivalTimes[node] = arrivalTime;
   for (TimingGraph::OutArcIt outArc(_graph, node); outArc != INVALID; ++outArc) {
-    updateArrivalTime(_graph.target(outArc));
+    Time delay = _delays[outArc];
+    decreaseArrivalTime(_graph.target(outArc), nodeAT + delay, arrivalTime + delay);
+  }
+}
+
+void TimingAnalysis::increaseArrivalTime(TimingGraph::Node node, Time newAT) {
+  Time oldAT = _arrivalTimes[node];
+  if (newAT > oldAT) {
+    // Arrival time increase in this node
+    for (TimingGraph::OutArcIt outArc(_graph, node); outArc != INVALID; ++outArc) {
+      increaseArrivalTime(_graph.target(outArc), newAT + _delays[outArc]);
+    }
+    _arrivalTimes[node] = newAT;
+  }
+}
+
+void TimingAnalysis::checkConsistency() {
+  std::vector<Time> oldATs(_graph.nodeNum());
+  for (int i = 0; i < _graph.nodeNum(); ++i) {
+    oldATs[i] = _arrivalTimes[_graph.nodeFromId(i)];
+  }
+  initArrivalTimes();
+  for (int i = 0; i < _graph.nodeNum(); ++i) {
+    assert(oldATs[i] == _arrivalTimes[_graph.nodeFromId(i)]);
   }
 }
 

@@ -46,6 +46,7 @@ BOOST_AUTO_TEST_CASE(testBasics) {
 
   TimingAnalysis ta(graph);
   ta.setDelays(delays);
+  ta.checkConsistency();
 
   BOOST_CHECK_EQUAL(ta.getArrivalTime(0), 0ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(1), 5ll);
@@ -53,22 +54,46 @@ BOOST_AUTO_TEST_CASE(testBasics) {
   BOOST_CHECK_EQUAL(ta.getArrivalTime(3), 14ll);
 
   ta.setDelay(0, 2);
+  ta.checkConsistency();
   BOOST_CHECK_EQUAL(ta.getArrivalTime(0), 0ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(1), 2ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(2), 8ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(3), 11ll);
 
   ta.setDelay(2, 3);
+  ta.checkConsistency();
   BOOST_CHECK_EQUAL(ta.getArrivalTime(0), 0ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(1), 2ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(2), 5ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(3), 8ll);
 
   ta.setDelay(3, 8);
+  ta.checkConsistency();
   BOOST_CHECK_EQUAL(ta.getArrivalTime(0), 0ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(1), 2ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(2), 5ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(3), 10ll);
+
+  ta.setDelay(3, 4);
+  ta.checkConsistency();
+  BOOST_CHECK_EQUAL(ta.getArrivalTime(0), 0ll);
+  BOOST_CHECK_EQUAL(ta.getArrivalTime(1), 2ll);
+  BOOST_CHECK_EQUAL(ta.getArrivalTime(2), 5ll);
+  BOOST_CHECK_EQUAL(ta.getArrivalTime(3), 8ll);
+
+  ta.setDelay(2, 6);
+  ta.checkConsistency();
+  BOOST_CHECK_EQUAL(ta.getArrivalTime(0), 0ll);
+  BOOST_CHECK_EQUAL(ta.getArrivalTime(1), 2ll);
+  BOOST_CHECK_EQUAL(ta.getArrivalTime(2), 8ll);
+  BOOST_CHECK_EQUAL(ta.getArrivalTime(3), 11ll);
+
+  ta.setDelay(0, 5);
+  ta.checkConsistency();
+  BOOST_CHECK_EQUAL(ta.getArrivalTime(0), 0ll);
+  BOOST_CHECK_EQUAL(ta.getArrivalTime(1), 5ll);
+  BOOST_CHECK_EQUAL(ta.getArrivalTime(2), 11ll);
+  BOOST_CHECK_EQUAL(ta.getArrivalTime(3), 14ll);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

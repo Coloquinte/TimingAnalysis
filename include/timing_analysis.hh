@@ -22,6 +22,8 @@ class TimingAnalysis {
     return _arrivalTimes[_graph.nodeFromId(node)];
   }
 
+  void checkConsistency();
+
  private:
   // For full timing analysis
   void initArrivalTimes();
@@ -29,6 +31,8 @@ class TimingAnalysis {
 
   // For incremental timing analysis
   void updateArrivalTime(TimingGraph::Node);
+  void decreaseArrivalTime(TimingGraph::Node node, Time oldAT, Time newAT);
+  void increaseArrivalTime(TimingGraph::Node node, Time newAT);
 
  private:
   TimingGraph &_graph;
