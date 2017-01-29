@@ -102,8 +102,8 @@ BOOST_AUTO_TEST_CASE(testBasics) {
 BOOST_AUTO_TEST_CASE(testPerformance) {
   TimingGraph graph;
 
-  const int nLayers = 50;
-  const int nNodesPerLayer = 1000;
+  const int nLayers = 20;
+  const int nNodesPerLayer = 500;
   const int nNodes = nLayers * nNodesPerLayer;
   std::mt19937 rgen;
   std::uniform_int_distribution<Time> time_dist(0, 1000);

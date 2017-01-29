@@ -30,6 +30,7 @@ class TimingHelper {
   void increaseArrivalTime(typename GR::Node node, Time newAT);
 
   void checkConsistency();
+  Time computeArrivalTime(typename GR::Node node) const;
 
  private:
   const GR &_graph;
@@ -144,12 +145,7 @@ void TimingHelper<GR>::decreaseArrivalTime(typename GR::Node node, Time oldAT, T
 
   // This was (one of) the critical edge for this node
   // We need to recompute the arrival time
-  Time arrivalTime = 0;
-  for (typename GR::InArcIt inArc(_graph, node); inArc != INVALID; ++inArc) {
-    typename GR::Node parent = _graph.source(inArc);
-    Time parentAT = _arrivalTimes[parent];
-    arrivalTime = std::max(arrivalTime, parentAT + _delays[inArc]);
-  }
+  Time arrivalTime = computeArrivalTime(node);
 
   assert (arrivalTime <= nodeAT);
   if (arrivalTime == nodeAT) {
@@ -181,13 +177,17 @@ void TimingHelper<GR>::increaseArrivalTime(typename GR::Node node, Time newAT) {
 template <typename GR>
 void TimingHelper<GR>::checkConsistency() {
   for (typename GR::NodeIt node(_graph); node != INVALID; ++node) {
-    Time arrivalTime = 0;
-    for (typename GR::InArcIt inArc(_graph, node); inArc != INVALID; ++inArc) {
-      typename GR::Node parent = _graph.source(inArc);
-      Time parentAT = _arrivalTimes[parent];
-      arrivalTime = std::max(arrivalTime, parentAT + _delays[inArc]);
-    }
-    assert(_arrivalTimes[node] == arrivalTime);
+    assert(computeArrivalTime(node) == _arrivalTimes[node]);
   }
 }
 
+template <typename GR>
+Time TimingHelper<GR>::computeArrivalTime(typename GR::Node node) const {
+  Time arrivalTime = 0;
+  for (typename GR::InArcIt inArc(_graph, node); inArc != INVALID; ++inArc) {
+    typename GR::Node parent = _graph.source(inArc);
+    Time parentAT = _arrivalTimes[parent];
+    arrivalTime = std::max(arrivalTime, parentAT + _delays[inArc]);
+  }
+  return arrivalTime;
+}
