@@ -53,6 +53,11 @@ BOOST_AUTO_TEST_CASE(testBasics) {
   BOOST_CHECK_EQUAL(ta.getArrivalTime(2), 11ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(3), 14ll);
 
+  BOOST_CHECK_EQUAL(ta.getOutputTime(0), 14ll);
+  BOOST_CHECK_EQUAL(ta.getOutputTime(1), 9ll);
+  BOOST_CHECK_EQUAL(ta.getOutputTime(2), 3ll);
+  BOOST_CHECK_EQUAL(ta.getOutputTime(3), 0ll);
+
   ta.setDelay(0, 2);
   ta.checkConsistency();
   BOOST_CHECK_EQUAL(ta.getArrivalTime(0), 0ll);
