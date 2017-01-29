@@ -136,7 +136,7 @@ template <typename GR>
 void TimingHelper<GR>::decreaseArrivalTime(typename GR::Node node, Time oldAT, Time newAT) {
   Time nodeAT = _arrivalTimes[node];
   assert (newAT < oldAT);
-  assert (nodeAT >= oldAT);
+  //assert (nodeAT >= oldAT /* May not be true if parallel edges mean the decrease happened already */ );
   if (nodeAT != oldAT) {
     // The arrival edge was not the critical one
     return;
@@ -160,8 +160,9 @@ void TimingHelper<GR>::decreaseArrivalTime(typename GR::Node node, Time oldAT, T
   // Propagate the new arrival time forward
   _arrivalTimes[node] = arrivalTime;
   for (typename GR::OutArcIt outArc(_graph, node); outArc != INVALID; ++outArc) {
+    typename GR::Node child = _graph.target(outArc);
     Time delay = _delays[outArc];
-    decreaseArrivalTime(_graph.target(outArc), nodeAT + delay, arrivalTime + delay);
+    decreaseArrivalTime(child, nodeAT + delay, arrivalTime + delay);
   }
 }
 
@@ -179,13 +180,14 @@ void TimingHelper<GR>::increaseArrivalTime(typename GR::Node node, Time newAT) {
 
 template <typename GR>
 void TimingHelper<GR>::checkConsistency() {
-  std::vector<Time> oldATs(_graph.nodeNum());
-  for (int i = 0; i < _graph.nodeNum(); ++i) {
-    oldATs[i] = _arrivalTimes[_graph.nodeFromId(i)];
-  }
-  initArrivalTimes();
-  for (int i = 0; i < _graph.nodeNum(); ++i) {
-    assert(oldATs[i] == _arrivalTimes[_graph.nodeFromId(i)]);
+  for (typename GR::NodeIt node(_graph); node != INVALID; ++node) {
+    Time arrivalTime = 0;
+    for (typename GR::InArcIt inArc(_graph, node); inArc != INVALID; ++inArc) {
+      typename GR::Node parent = _graph.source(inArc);
+      Time parentAT = _arrivalTimes[parent];
+      arrivalTime = std::max(arrivalTime, parentAT + _delays[inArc]);
+    }
+    assert(_arrivalTimes[node] == arrivalTime);
   }
 }
 

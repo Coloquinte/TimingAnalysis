@@ -102,8 +102,8 @@ BOOST_AUTO_TEST_CASE(testBasics) {
 BOOST_AUTO_TEST_CASE(testPerformance) {
   TimingGraph graph;
 
-  const int nLayers = 10;
-  const int nNodesPerLayer = 100;
+  const int nLayers = 50;
+  const int nNodesPerLayer = 1000;
   const int nNodes = nLayers * nNodesPerLayer;
   std::mt19937 rgen;
   std::uniform_int_distribution<Time> time_dist(0, 1000);
@@ -120,14 +120,13 @@ BOOST_AUTO_TEST_CASE(testPerformance) {
   ta.setDelays(delays);
 
   const int nChanges = 100000;
-  std::uniform_int_distribution<int> arc_dist(0, graph.arcNum());
+  std::uniform_int_distribution<int> arc_dist(0, graph.arcNum()-1);
   for (int i = 0; i < nChanges; ++i) {
     int arc = arc_dist(rgen);
     Time d = time_dist(rgen);
-    std::cout << i << ": arc " << arc << " from " << ta.getDelay(arc) << " to " << d << std::endl;
     ta.setDelay(arc, d);
-    ta.checkConsistency();
   }
+  ta.checkConsistency();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
