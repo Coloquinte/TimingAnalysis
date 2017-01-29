@@ -64,6 +64,8 @@ void TimingAnalysis::setDelays(const std::vector<Time> &delays) {
 }
 
 void TimingAnalysis::setDelay(int edgeId, Time delay) {
+  assert (edgeId < _graph.arcNum());
+
   TimingGraph::Arc edge = _graph.arcFromId(edgeId);
   Time oldDelay = _delays[edge];
   _delays[edge] = delay;
@@ -72,6 +74,11 @@ void TimingAnalysis::setDelay(int edgeId, Time delay) {
   helper.changeDelay(edge, oldDelay, delay);
   RTimingHelper rhelper(_rgraph, _delays, _outputTimes);
   rhelper.changeDelay(edge, oldDelay, delay);
+}
+
+Time TimingAnalysis::getDelay(int edgeId) const {
+  assert (edgeId < _graph.arcNum());
+  return _delays[_graph.arcFromId(edgeId)];
 }
 
 void TimingAnalysis::checkConsistency() {
@@ -144,6 +151,13 @@ void TimingHelper<GR>::decreaseArrivalTime(typename GR::Node node, Time oldAT, T
     arrivalTime = std::max(arrivalTime, parentAT + _delays[inArc]);
   }
 
+  assert (arrivalTime <= nodeAT);
+  if (arrivalTime == nodeAT) {
+    // No decrease
+    return;
+  }
+
+  // Propagate the new arrival time forward
   _arrivalTimes[node] = arrivalTime;
   for (typename GR::OutArcIt outArc(_graph, node); outArc != INVALID; ++outArc) {
     Time delay = _delays[outArc];

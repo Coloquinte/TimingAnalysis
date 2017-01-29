@@ -9,7 +9,7 @@
 
 using namespace lemon;
 
-TimingGraph genRandomGraph(int layers, int nodesPerLayer, double arcsPerNode) {
+void genRandomGraph(TimingGraph &ret, int layers, int nodesPerLayer, double arcsPerNode) {
   int n = layers * nodesPerLayer;
   std::vector<std::pair<int, int> > arcs;
 
@@ -26,9 +26,7 @@ TimingGraph genRandomGraph(int layers, int nodesPerLayer, double arcsPerNode) {
 
   std::sort(arcs.begin(), arcs.end());  // Required for build
 
-  TimingGraph ret;
   ret.build(n, arcs.begin(), arcs.end());
-  return ret;
 }
 
 BOOST_AUTO_TEST_SUITE(testTimingAnalysis)
@@ -99,6 +97,37 @@ BOOST_AUTO_TEST_CASE(testBasics) {
   BOOST_CHECK_EQUAL(ta.getArrivalTime(1), 5ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(2), 11ll);
   BOOST_CHECK_EQUAL(ta.getArrivalTime(3), 14ll);
+}
+
+BOOST_AUTO_TEST_CASE(testPerformance) {
+  TimingGraph graph;
+
+  const int nLayers = 10;
+  const int nNodesPerLayer = 100;
+  const int nNodes = nLayers * nNodesPerLayer;
+  std::mt19937 rgen;
+  std::uniform_int_distribution<Time> time_dist(0, 1000);
+
+  genRandomGraph(graph, nLayers, nNodesPerLayer, 3.0);
+  assert (nNodes == graph.nodeNum());
+
+  TimingAnalysis ta (graph);
+
+  std::vector<Time> delays(graph.arcNum());
+  for (Time &d : delays) {
+    d = time_dist(rgen);
+  }
+  ta.setDelays(delays);
+
+  const int nChanges = 100000;
+  std::uniform_int_distribution<int> arc_dist(0, graph.arcNum());
+  for (int i = 0; i < nChanges; ++i) {
+    int arc = arc_dist(rgen);
+    Time d = time_dist(rgen);
+    std::cout << i << ": arc " << arc << " from " << ta.getDelay(arc) << " to " << d << std::endl;
+    ta.setDelay(arc, d);
+    ta.checkConsistency();
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

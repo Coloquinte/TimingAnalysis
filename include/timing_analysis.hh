@@ -18,6 +18,7 @@ class TimingAnalysis {
 
   void setDelays(const std::vector<Time> &delays);
   void setDelay(int edge, Time delay);
+  Time getDelay(int edge) const;
 
   Time getArrivalTime(int node) const {
     return _arrivalTimes[_graph.nodeFromId(node)];
